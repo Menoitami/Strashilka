@@ -96,7 +96,7 @@ func _world() -> void:
 func _load_creature() -> void:
     var document := GLTFDocument.new()
     var state := GLTFState.new()
-    var path := ProjectSettings.globalize_path(mesh_path)
+    var path := preload("res://runtime_paths.gd").resolve(mesh_path)
     var result := document.append_from_file(path, state)
     if result != OK:
         error_text = "Cannot load model: " + path + " (run scripts/run_3d.sh --generate)"

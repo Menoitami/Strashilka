@@ -1,4 +1,5 @@
 extends Node3D
+const RuntimePaths = preload("res://runtime_paths.gd")
 
 var surface: MeshInstance3D
 var skeleton: Skeleton3D
@@ -41,6 +42,16 @@ var skin_wetness := .35
 var face_transition_seconds := 1.2
 var face_progress := 0.0
 var face_maps := {}
+var face_from := Vector4.ZERO
+var face_target := Vector4.ZERO
+var face_shape := Vector4.ZERO
+var face_geometry := 1.0
+var anatomy_amount := 1.0
+var effects_amount := .75
+var mutation_audio := .35
+var mutation_plan := {}
+var head_bounds := Vector2(2.25, 2.9)
+var face_revision := 0
 
 func face_transition_finished() -> bool:
     return face_maps.is_empty() or face_progress >= face_transition_seconds
@@ -54,6 +65,10 @@ func clear_face() -> void:
 func inherit_face(other: Node3D) -> void:
     face_maps = other.face_maps.duplicate()
     face_progress = other.face_progress
+    face_from = other.face_from
+    face_target = other.face_target
+    face_shape = other.face_shape
+    face_revision = other.face_revision
     _update_face(0)
 
 func load_face(directory: String) -> Error:
@@ -61,35 +76,73 @@ func load_face(directory: String) -> Error:
         return ERR_BUSY
     var loaded := {}
     for channel in ["albedo", "normal", "mask"]:
+        if not FileAccess.file_exists(directory.path_join(channel+".png")):
+            return ERR_FILE_NOT_FOUND
         var image := Image.load_from_file(directory.path_join(channel+".png"))
         if image == null or image.is_empty():
             return ERR_FILE_NOT_FOUND
         image.generate_mipmaps()
         loaded[channel] = ImageTexture.create_from_image(image)
+    var next_maps := {}
     for channel in ["albedo", "normal"]:
-        face_maps[channel+"_previous"] = face_maps.get(channel+"_next", material.get_shader_parameter(channel+"_2"))
-        face_maps[channel+"_next"] = loaded[channel]
-    face_maps["mask"] = loaded.mask
+        next_maps[channel+"_previous"] = face_maps.get(channel+"_next", material.get_shader_parameter(channel+"_2"))
+        next_maps[channel+"_next"] = loaded[channel]
+    next_maps["mask"] = loaded.mask
+    next_maps["flow_enabled"] = false
+    var metadata = JSON.parse_string(FileAccess.get_file_as_string(directory.path_join("face.json")))
+    if metadata is Dictionary and metadata.has("portrait_view"):
+        var portraits := {}
+        for channel in ["portrait_previous", "portrait_next", "flow_forward", "flow_backward"]:
+            if not FileAccess.file_exists(directory.path_join(channel+".png")):
+                return ERR_FILE_NOT_FOUND
+            var image := Image.load_from_file(directory.path_join(channel+".png"))
+            if image == null or image.is_empty():
+                return ERR_FILE_NOT_FOUND
+            portraits[channel] = ImageTexture.create_from_image(image)
+        next_maps.merge(portraits, true)
+        var view: Array = metadata.portrait_view
+        if view.size() != 3 or float(view[2]) <= 0:
+            return ERR_INVALID_DATA
+        next_maps["projection"] = Vector3(view[0], view[1], view[2])
+        next_maps["flow_enabled"] = true
+        set_face_shape(metadata.get("face_traits", [0,0,0,0]))
+    face_maps = next_maps
+    face_revision += 1
     face_progress = 0
     _update_face(0)
     return OK
 
 func _update_face(delta: float) -> void:
-    if not material or face_maps.is_empty():
+    if not material:
         return
     if mutation:
         face_progress += delta
+    var mix_ := smoothstep(0, 1, clampf(face_progress/maxf(.1, face_transition_seconds), 0, 1))
+    face_shape = face_from.lerp(face_target, mix_)
+    material.set_shader_parameter("face_shape", face_shape*face_geometry)
+    if face_maps.is_empty():
+        return
     for name_ in face_maps:
         material.set_shader_parameter("face_"+name_, face_maps[name_])
     material.set_shader_parameter("face_enabled", true)
-    material.set_shader_parameter("face_mix", smoothstep(0, 1, clampf(face_progress/maxf(.1, face_transition_seconds), 0, 1)))
+    material.set_shader_parameter("face_mix", mix_)
+
+func set_face_shape(values: Array) -> void:
+    if values.size() != 4:
+        return
+    for value in values:
+        if not (value is float or value is int) or not is_finite(float(value)):
+            return
+    face_from = face_shape
+    face_target = Vector4(clampf(values[0],-1,1),clampf(values[1],-1,1),clampf(values[2],-1,1),clampf(values[3],-1,1))
+    face_progress = 0
 
 func transition_finished() -> bool:
     return not live or live_progress >= transition_seconds+hold_seconds
 
 
 func load_maps(path: String) -> Error:
-    var directory := ProjectSettings.globalize_path(path).get_base_dir()
+    var directory := RuntimePaths.resolve(path).get_base_dir()
     if not FileAccess.file_exists(directory.path_join("forms.json")):
         return OK
     var manifest = JSON.parse_string(FileAccess.get_file_as_string(directory.path_join("forms.json")))
@@ -100,6 +153,7 @@ func load_maps(path: String) -> Error:
     live_lora = manifest.get("lora") != null
     live_seed = int(manifest.get("seed", 0))
     live_seconds = float(manifest.get("seconds", 0))
+    mutation_plan = manifest.get("mutation", {})
     if live:
         automatic = false
         manual_form = 1
@@ -135,8 +189,10 @@ func select_form(value: float) -> void:
 
 func _update_form(delta: float) -> void:
     if not multiform:
-        if surface.get_blend_shape_count() > 0:
-            surface.set_blend_shape_value(0, mutation_amount*(.5+.5*sin(time*1.6)) if mutation else 0)
+        if surface.get_blend_shape_count() > 0 and mutation:
+            surface.set_blend_shape_value(0, mutation_amount*(.5+.5*sin(flow_clock*1.6)))
+        if mutation:
+            flow_clock += delta
         return
     if mutation:
         flow_clock += delta
@@ -165,7 +221,6 @@ func _update_form(delta: float) -> void:
     material.set_shader_parameter("roughness_value", roughness_value)
     material.set_shader_parameter("debug_view", debug_view)
     material.set_shader_parameter("flow_clock", flow_clock)
-    _update_face(delta)
     for property in ["flow_amount", "flow_speed", "monochrome", "contrast_value", "skin_detail", "skin_wetness"]:
         material.set_shader_parameter(property, get(property))
 
@@ -178,7 +233,7 @@ func appearance_text() -> String:
 func load_model(path: String) -> Error:
     var document := GLTFDocument.new()
     var state := GLTFState.new()
-    var result := document.append_from_file(ProjectSettings.globalize_path(path), state)
+    var result := document.append_from_file(RuntimePaths.resolve(path), state)
     if result != OK:
         return result
     var scene := document.generate_scene(state)
@@ -204,6 +259,18 @@ func load_model(path: String) -> Error:
     var maps_error := load_maps(path)
     if maps_error != OK:
         return maps_error
+    head_bounds = Vector2(skeleton.get_bone_global_rest(skeleton.find_bone("Neck")).origin.y-.01, surface.mesh.get_aabb().end.y)
+    if material == null:
+        var original := surface.get_active_material(0) as StandardMaterial3D
+        material = ShaderMaterial.new()
+        material.shader = preload("res://shaders/multiform.gdshader")
+        material.set_shader_parameter("use_vertex_color", original == null or original.albedo_texture == null)
+        material.set_shader_parameter("use_normal_maps", false)
+        if original and original.albedo_texture:
+            for index in range(3):
+                material.set_shader_parameter("albedo_"+str(index), original.albedo_texture)
+        surface.material_override = material
+    material.set_shader_parameter("head_bounds", head_bounds)
     for name_ in animation.get_animation_list():
         if str(name_).contains("CreepWalk"):
             walk_name = name_
@@ -243,3 +310,7 @@ func _pose(delta: float) -> void:
         var animated := skeleton.get_bone_pose_position(pelvis)
         skeleton.set_bone_pose_position(pelvis, rest.lerp(animated, motion_mix))
     _update_form(delta)
+    _update_face(delta)
+    if material:
+        for property in ["flow_amount", "flow_speed", "flow_clock", "monochrome", "contrast_value", "skin_detail", "skin_wetness", "roughness_value"]:
+            material.set_shader_parameter(property, get(property))

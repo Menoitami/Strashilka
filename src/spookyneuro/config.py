@@ -25,8 +25,8 @@ class Settings:
     def validate(self):
         if self.size not in (256, 384, 512):
             raise ValueError("size must be 256, 384 or 512")
-        if self.steps not in (2, 4, 6, 8):
-            raise ValueError("steps must be 2, 4, 6 or 8")
+        if self.steps not in (2, 4, 6, 8, 16, 24, 32):
+            raise ValueError("steps must be 2, 4, 6, 8, 16, 24 or 32")
         if not 0 < self.strength <= 1 or int(self.steps * self.strength) < 1:
             raise ValueError("strength must yield at least one actual denoising step")
         if self.noise_period <= 0 or not 0 <= self.lora_scale <= 2:

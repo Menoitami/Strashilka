@@ -1,0 +1,66 @@
+{
+  "sequence": 12,
+  "directory": ".",
+  "seed": 217,
+  "seconds": 18.086014100001194,
+  "alignment": {
+    "origin": [
+      0.0,
+      -0.46916230366492145,
+      -0.027329842931937187
+    ],
+    "scale": 3.166445623342175,
+    "radius": 0.87
+  },
+  "sampled_at_seconds": 17.911771200000658,
+  "focus": [
+    0.01458325232573773,
+    1.5856366904250863,
+    0.012511727315820629
+  ],
+  "change": 0.00859827007865875,
+  "diffusion": {
+    "inference_ms": 11171.669800001837,
+    "segmentation_ms": 108.82149999815738,
+    "render_ms": 11280.491500001517,
+    "peak_vram_mib": 4278.2333984375,
+    "actual_steps": 16,
+    "mock": false,
+    "mask_mode": "free",
+    "mask_provider": "CPUExecutionProvider",
+    "device_used_mib": 5896.5,
+    "steps": 24,
+    "sampler": "DPM++ 2M Karras",
+    "strength": 0.68,
+    "allocated_vram_mib": 3667.64453125,
+    "reserved_vram_mib": 4634.0
+  },
+  "reconstruction": {
+    "neural": true,
+    "model": "stabilityai/TripoSR"
+  },
+  "prompt_from": "full length studio photograph of an adult man in dark shorts, head and feet visible, realistic human face, detailed skin, front view, standing, soft neutral light, black background",
+  "prompt_to": "full length studio photograph of an adult man in dark shorts, head and feet visible, elongated asymmetric face, swollen uneven shoulders, detailed human skin, front view, standing, soft neutral light, black background",
+  "prompt_mix": 0.663923182441701,
+  "comparison": {},
+  "continuity": {
+    "silhouette_iou": 0.9879350348027842,
+    "color_mae": 0.007337821616825844,
+    "accepted": true
+  },
+  "path_position": 1.3200000000000003,
+  "color_detail": "generated_front_projection",
+  "front_projection": [
+    1.6079459439500792,
+    -0.30690839271867953,
+    -1.6019010343863573,
+    1.2980150964495387
+  ],
+  "recovered_from_anchor": false,
+  "schema": 2,
+  "representation": "neural_density_rgba8",
+  "resolution": 192,
+  "bytes": 28311552,
+  "density_max": 128.0,
+  "playback_only": true
+}

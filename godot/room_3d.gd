@@ -1,12 +1,18 @@
 extends "res://main.gd"
 
 const Creature = preload("res://skinned_creature.gd")
+const RuntimePaths = preload("res://runtime_paths.gd")
 var actor = Creature.new()
 var evaporation = preload("res://evaporation.gd").new()
 var evaporation_button: CheckButton
 var evaporation_controls := {}
 var no_evaporation := false
 var stage = preload("res://realism_stage.gd").new()
+var mutations = preload("res://mutation_director.gd").new()
+var mutation_demo := false
+var mutation_demo_clock := 0.0
+var mutation_demo_sequence := 1
+var no_mutation_fx := false
 var stage_controls := {}
 var flashlight_button: CheckButton
 var approach_button: CheckButton
@@ -48,16 +54,31 @@ var prepared_session := ""
 var prepared_worker := -1
 var prepared_packet: Dictionary = {}
 
-const SETTINGS_FILE = "user://realism_settings_v4.json"
-const DEFAULTS = {"mutation_amount": 1.0, "transition_seconds": 6.0, "hold_seconds": 0.0,
+const SETTINGS_FILE = "user://realism_settings_v5.json"
+const DEFAULTS = {"mutation_amount": 1.0, "transition_seconds": 1.2, "hold_seconds": 2.0,
     "color_blend": 1.0, "relief_blend": 1.0, "relief_strength": .5, "roughness_value": .73, "walk_speed": .82,
-    "flow_amount": .009, "flow_speed": .65, "monochrome": .12, "contrast_value": 1.0, "skin_detail": .65, "skin_wetness": .35, "face_transition_seconds": 1.2}
+    "flow_amount": .009, "flow_speed": .65, "monochrome": .12, "contrast_value": 1.0, "skin_detail": .65, "skin_wetness": .35, "face_transition_seconds": 1.2,
+    "face_geometry": 1.0, "anatomy_amount": 1.0, "effects_amount": .75, "mutation_audio": .35}
 
 
 func _ready() -> void:
-    if mesh_path == "res://../artifacts/3d/generated/creature.glb" and FileAccess.file_exists("res://../assets/creature/realistic/creature.glb"):
+    if "--export-launch-settings" in OS.get_cmdline_user_args():
+        var exporter = load("res://tools/export_launch_settings.gd")
+        var result: int = exporter.export_settings(OS.get_cmdline_user_args())
+        for unused in [actor, evaporation, stage, mutations]:
+            unused.free()
+        get_tree().quit(result)
+        return
+    if mesh_path == "res://../artifacts/3d/generated/creature.glb" and FileAccess.file_exists(RuntimePaths.resolve("res://../assets/creature/realistic/creature.glb")):
         mesh_path = "res://../assets/creature/realistic/creature.glb"
     for arg in OS.get_cmdline_user_args():
+        if arg == "--mutation-demo":
+            mutation_demo = true
+            offline = true
+        if arg == "--no-mutation-fx":
+            no_mutation_fx = true
+        if arg.begins_with("--mutation-family="):
+            mutation_demo_sequence = clampi(int(arg.trim_prefix("--mutation-family=")),0,3)
         if arg == "--cinematic":
             cinematic = true
         if arg.begins_with("--prepared-session="):
@@ -127,6 +148,8 @@ func _ready() -> void:
             get_tree().quit(1)
             return
     add_child(evaporation)
+    add_child(mutations)
+    mutations.build(camera)
     spawn = enemy.position
     for light in find_children("*", "OmniLight3D", true, false):
         light.shadow_enabled = true
@@ -139,6 +162,9 @@ func _ready() -> void:
         _load_settings()
     if no_evaporation:
         evaporation_button.button_pressed = false
+    if no_mutation_fx:
+        actor.effects_amount = 0
+        actor.mutation_audio = 0
     if initial_form >= 0:
         actor.select_form(initial_form)
     if demo:
@@ -151,6 +177,10 @@ func _ready() -> void:
                 button.set_pressed_no_signal(false)
     last_frame_tick = Time.get_ticks_usec()
     scene_started = last_frame_tick
+    if not actor.mutation_plan.is_empty():
+        mutations.submit(actor.mutation_plan,actor)
+    elif mutation_demo:
+        _demo_mutation()
     if not prepared_packet.is_empty():
         generation_directory = prepared_session
         generation_pid = prepared_worker
@@ -228,6 +258,14 @@ func _build_ui() -> void:
     generation_button.pressed.connect(_start_generation)
     controls.add_child(generation_button)
     morph_button = _toggle(controls, "Время превращения [M]", true, func(v): actor.mutation = v, KEY_M)
+    _setting(controls, "Изменение анатомии", "anatomy_amount", 0, 1, .05)
+    _setting(controls, "Объём лица", "face_geometry", 0, 1, .05)
+    _setting(controls, "Искажение пространства", "effects_amount", 0, 1, .05)
+    _setting(controls, "Звук мутации", "mutation_audio", 0, 1, .05)
+    var mutation_button := Button.new()
+    mutation_button.text = "Демонстрация мутации [N]"
+    mutation_button.pressed.connect(_demo_mutation)
+    controls.add_child(mutation_button)
     evaporation_button = _toggle(controls, "Тёмное испарение [V]", true, func(v): evaporation.enabled = v, KEY_V)
     for spec in [["Плотность испарения", "density", 0, 2, .05], ["Подъём испарения", "rise_speed", .1, 1.5, .05]]:
         var property: String = spec[1]
@@ -411,7 +449,10 @@ func _start_generation() -> void:
     if generation_pid > 0:
         _stop_generation()
         return
-    var root_path := ProjectSettings.globalize_path("res://..").simplify_path()
+    var root_path := RuntimePaths.root()
+    if not FileAccess.file_exists(RuntimePaths.python()):
+        generation_label.text = "Python не установлен. Запустите Start SpookyNeuro.cmd для установки."
+        return
     generation_directory = root_path.path_join("artifacts/3d/live/"+str(int(Time.get_unix_time_from_system()))+"_"+str(Time.get_ticks_msec()))
     DirAccess.make_dir_recursive_absolute(generation_directory)
     _write_live_settings()
@@ -422,7 +463,8 @@ func _start_generation() -> void:
         actor.select_form(0)
     last_sequence = 0
     last_face_sequence = 0
-    generation_pid = OS.create_process(root_path.path_join(".venv/bin/python"), [root_path.path_join("scripts/live_3d.py"), "--output", generation_directory, "--seed", str(int(seed_input.value)), "--parent", str(OS.get_process_id())])
+    OS.set_environment("PYTHONUTF8", "1")
+    generation_pid = OS.create_process(RuntimePaths.python(), [root_path.path_join("scripts/live_3d.py"), "--output", generation_directory, "--seed", str(int(seed_input.value)), "--parent", str(OS.get_process_id())])
     live_enabled = generation_pid > 0
     generation_button.text = "Остановить поток ИИ [G]" if live_enabled else "Запустить поток ИИ [G]"
     generation_label.text = "Загрузка моделей…" if live_enabled else "Не удалось запустить Python."
@@ -466,7 +508,7 @@ func _poll_generation(delta: float) -> void:
     if not live_enabled or not actor.mutation:
         return
     _poll_face()
-    if not actor.transition_finished():
+    if not actor.transition_finished() or mutations.busy():
         return
     var latest_path := generation_directory.path_join("latest.json")
     if not FileAccess.file_exists(latest_path):
@@ -486,6 +528,7 @@ func _poll_generation(delta: float) -> void:
     for property in DEFAULTS:
         replacement.set(property, actor.get(property))
     replacement.position = actor.position
+    replacement.scale = actor.scale
     replacement.debug_view = actor.debug_view
     replacement.time = actor.time
     replacement.flow_clock = actor.flow_clock
@@ -496,6 +539,8 @@ func _poll_generation(delta: float) -> void:
     replacement._pose(0)
     actor.queue_free()
     actor = replacement
+    if not actor.mutation_plan.is_empty():
+        mutations.submit(actor.mutation_plan,actor)
     mesh_path = path
     last_sequence = int(packet.sequence)
     live_updates += 1
@@ -541,6 +586,8 @@ func _unhandled_input(event: InputEvent) -> void:
             Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
         if event.keycode == KEY_G:
             _start_generation()
+        if event.keycode == KEY_N:
+            _demo_mutation()
         if event.keycode == KEY_F12:
             _capture_screenshot()
         for button in find_children("*", "CheckButton", true, false):
@@ -577,7 +624,17 @@ func _process(delta: float) -> void:
         _scenario()
     actor._pose(delta)
     _poll_generation(delta)
-    evaporation.advance(delta, actor)
+    if mutation_demo and actor.mutation:
+        mutation_demo_clock += delta
+        if mutation_demo_clock >= 6:
+            mutation_demo_clock = 0
+            _demo_mutation()
+    mutations.advance(delta,actor)
+    evaporation.advance(delta if actor.mutation else 0.0, actor, mutations.focus, mutations.intensity*actor.effects_amount)
+    var collider: CollisionShape3D = enemy.get_child(0)
+    collider.shape.height = 3.0*actor.scale.y
+    collider.shape.radius = .43*actor.scale.x
+    collider.position.y = -1.65+collider.shape.height*.5
     var tick := Time.get_ticks_usec()
     var frame_ms := (tick-last_frame_tick)/1000.0
     last_frame_tick = tick
@@ -607,6 +664,12 @@ func _scenario() -> void:
     var toward := enemy.global_position-player.global_position
     yaw = atan2(-toward.x, -toward.z)
 
+func _demo_mutation() -> void:
+    if mutations.busy():
+        return
+    mutations.submit(mutations.demo_plan(mutation_demo_sequence),actor)
+    mutation_demo_sequence += 1
+
 func _capture_screenshot() -> void:
     await RenderingServer.frame_post_draw
     var path := smoke_output+".png" if not smoke_output.is_empty() else "user://creature_room_3d.png"
@@ -626,5 +689,6 @@ func _save_smoke() -> void:
         "forms": [actor.form_weights.x, actor.form_weights.y, actor.form_weights.z],
         "evaporation_enabled": evaporation.enabled, "live_updates": live_updates, "live_generation_seconds": live_times, "worker_directory": generation_directory,
         "face_updates": face_updates, "face_during_body": face_during_body, "face_seconds": face_times,
+        "mutation_family": mutations.family, "mutation_events": mutations.completed, "anatomy_modules": mutations.modules.size(),
         "multiform": actor.multiform, "client_connected": client.connected, "end_position": [enemy.position.x, enemy.position.y, enemy.position.z]}
     FileAccess.open(smoke_output+".json", FileAccess.WRITE).store_string(JSON.stringify(report, "  "))

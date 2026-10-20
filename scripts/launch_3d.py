@@ -8,6 +8,8 @@ import sys
 import time
 from pathlib import Path
 
+from spookyneuro.runtime import godot_command
+
 ROOT = Path(__file__).resolve().parents[1]
 REQUIRED_PACKET_FILES = (
     "creature.glb",
@@ -23,20 +25,42 @@ REQUIRED_PACKET_FILES = (
 
 def read_json(path):
     try:
-        return json.loads(path.read_text())
+        return json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
 
 
 def ready_packet(directory):
     packet = read_json(directory / "latest.json")
+    if isinstance(packet, dict) and packet.get("schema") == 2:
+        queue = read_json(directory / "queue.json") or {}
+        entries = queue.get("packets", [])
+        if len(entries)<3 or [entry.get("sequence") for entry in entries[:3]] != [1,2,3]:
+            return None
+        # The worker now runs ahead. Start with the first state, never the newest one.
+        packet = read_json(directory / "field_000001" / "field.json")
+        for entry in entries[:3]:
+            folder = Path(entry.get("directory", "")).resolve()
+            if folder.parent != directory.resolve():
+                raise RuntimeError("Queued field points outside its session directory")
+            if not (folder/"field.rgba").is_file() or not (folder/"field.json").is_file():
+                return None
+            manifest = read_json(folder/"field.json") or {}
+            expected = int(manifest.get("resolution",0))**3*4
+            if expected<=0 or (folder/"field.rgba").stat().st_size != expected or manifest.get("bytes") != expected:
+                return None
+            if "front_projection" in manifest and not (folder/"concept.png").is_file():
+                return None
+            if manifest.get("diffusion",{}).get("mock") is not False or not manifest.get("reconstruction",{}).get("neural"):
+                raise RuntimeError("Queued field is not a real neural result")
     if not isinstance(packet, dict) or packet.get("sequence") != 1:
         return None
     folder = Path(packet.get("directory", "")).resolve()
     if folder.parent != directory.resolve():
         raise RuntimeError("The first packet points outside its session directory")
+    required = ("field.json", "field.rgba") if packet.get("schema") == 2 else REQUIRED_PACKET_FILES
     if not all(
-        (folder / name).is_file() and (folder / name).stat().st_size for name in REQUIRED_PACKET_FILES
+        (folder / name).is_file() and (folder / name).stat().st_size for name in required
     ):
         return None
     if packet.get("diffusion", {}).get("mock") is not False or not packet.get("reconstruction", {}).get(
@@ -89,6 +113,7 @@ def stop_process(process, graceful=10):
 
 
 def launch(arguments):
+    legacy = "--legacy-mesh" in arguments
     session = ROOT / "artifacts/3d/live" / f"{time.time_ns()}_launch"
     session.mkdir(parents=True)
     worker, game = None, None
@@ -97,17 +122,17 @@ def launch(arguments):
         raise KeyboardInterrupt
 
     signal.signal(signal.SIGTERM, interrupted)
+    environment = os.environ.copy()
+    environment.update(PYTHONUTF8="1", PYTHONIOENCODING="utf-8", SPOOKY_ROOT=str(ROOT))
     try:
         # Godot resolves its own user:// location; share exactly the current UI defaults.
         exported = subprocess.run(
             [
-                str(ROOT / ".tools/godot"),
+                *godot_command(ROOT),
                 "--headless",
-                "--path",
-                str(ROOT / "godot"),
-                "--script",
-                "res://tools/export_launch_settings.gd",
                 "--",
+                "--export-launch-settings",
+                *(["--legacy-mesh"] if legacy else []),
                 "--output=" + str(session / "settings.json"),
                 *(
                     ["--defaults"]
@@ -122,17 +147,19 @@ def launch(arguments):
             check=False,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            env=environment,
             timeout=30,
         )
         if exported.returncode or not (session / "settings.json").exists():
             raise RuntimeError("Не удалось прочитать настройки Godot: " + exported.stdout + exported.stderr)
         print("Подготовка нейрорендера. Окно игры откроется после первой готовой формы.", flush=True)
         print("Журнал: " + str(session / "worker.log"), flush=True)
-        with (session / "worker.log").open("w") as log:
+        with (session / "worker.log").open("w", encoding="utf-8") as log:
             worker = subprocess.Popen(
                 [
                     sys.executable,
-                    str(ROOT / "scripts/live_3d.py"),
+                    str(ROOT / "scripts" / ("live_3d.py" if legacy else "live_field.py")),
                     "--output",
                     str(session),
                     "--seed",
@@ -144,25 +171,25 @@ def launch(arguments):
                 stdout=log,
                 stderr=subprocess.STDOUT,
                 start_new_session=True,
+                env=environment,
             )
             packet = wait_ready(worker, session)
             ready_at = time.time()
-            print("Первая форма и текстуры готовы. Открываю игру.", flush=True)
+            print("Буфер из трёх нейронных объёмов готов. Открываю игру." if not legacy
+                  else "Первая форма и текстуры готовы. Открываю игру.", flush=True)
             game = subprocess.Popen(
                 [
-                    str(ROOT / ".tools/godot"),
-                    "--path",
-                    str(ROOT / "godot"),
+                    *godot_command(ROOT),
                     "--disable-vsync",
                     "--max-fps",
                     "60",
-                    "res://room_3d.tscn",
                     "--",
                     *arguments,
                     "--prepared-session=" + str(session),
                     "--prepared-worker=" + str(worker.pid),
                 ],
                 cwd=ROOT,
+                env=environment,
             )
             (session / "launch.json").write_text(
                 json.dumps(
@@ -194,7 +221,7 @@ def launch(arguments):
         if game is not None and game.poll() is None:
             game.terminate()
         stop_process(game, 3)
-        stop_process(worker)
+        stop_process(worker,30 if not legacy else 10)
 
 
 if __name__ == "__main__":

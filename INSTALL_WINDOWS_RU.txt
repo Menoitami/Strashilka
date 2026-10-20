@@ -1,0 +1,51 @@
+SpookyNeuro — Windows x86_64
+
+Архив этой платформы: dist/windows/SpookyNeuro-Windows-x86_64.zip.
+Linux-пакет поставляется отдельно в dist/linux/SpookyNeuro-Arch-x86_64.zip.
+
+1. Распакуйте весь архив в папку с правом записи (например, D:\Games\SpookyNeuro).
+2. Запустите Start SpookyNeuro.cmd.
+3. При первом запуске установятся локальные Python 3.12.12, зависимости с
+   CUDA-версией PyTorch 2.11.0 и веса моделей. Нужны интернет, NVIDIA GPU и
+   актуальный драйвер с поддержкой CUDA 12.8. Оставьте около 25 ГБ свободного
+   места для окружения, кеша пакетов и весов; объём зависит от существующих кешей.
+4. Игра откроется после заполнения буфера из трёх нейросетевых форм. Следующие
+   запуски используют скачанные веса. Логи: artifacts\3d\live\<сессия>\worker.log.
+   Закрытие игры останавливает генерацию.
+
+SpookyNeuro.exe и SpookyNeuro.pck — экспортированный Godot-плеер. Python и
+большие веса нейросетей не включены в ZIP, их устанавливает первый запуск.
+Neural Entity Demo.cmd и Offline Preview.cmd показывают сохранённые нейронные
+объёмы с непрерывным превращением и свободной камерой. Новые формы в демо
+не генерируются; Python и загрузка моделей для него не нужны. Прямой запуск
+SpookyNeuro.exe также открывает демо. Для живой генерации нужен Start SpookyNeuro.cmd.
+
+Mutation Demo.cmd теперь также запускает нейронный объём. Старый опыт с
+дополнительными руками доступен только с явным аргументом --legacy-mesh.
+Новый режим не использует общий меш, риг, авторские головы и конечности.
+Подробности: docs\NEURAL_ENTITY_RU.md.
+
+WASD — ходьба, ПКМ — осмотр, O — обход по кругу, M — заморозить изменения,
+G — пауза/продолжение ИИ, F — пространственные эффекты, Tab — панель,
+N — перейти к следующему подготовленному объёму в демо,
+F12 — снимок. Настройки сохранены в пользовательской папке Godot.
+
+Сборка из исходников:
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build_windows.ps1
+
+Результат: dist\windows\SpookyNeuro-Windows-x86_64.zip и распакованная папка
+dist\windows\SpookyNeuro-Windows-x86_64. В Windows-пакет входят только
+Windows-команды установки и запуска; исходники для сборки берите из Git.
+
+Проверки (после setup_windows.ps1 -Dev):
+.venv\Scripts\python.exe -m pytest -q
+.venv\Scripts\ruff.exe check src tests scripts
+.tools\godot.exe --headless --path godot --script res://tests/room_3d_check.gd
+.tools\godot.exe --headless --path godot --script res://tests/neural_field_check.gd
+
+При переносе уже установленной папки на другой диск заново создайте .venv
+через setup_windows.ps1: окружения Python не гарантируют переносимость.
+Распаковка исходного ZIP в новую папку выполняет чистую локальную установку.
+
+Лицензии компонентов находятся в third_party. Веса SD 1.5, LCM и TripoSR
+загружаются из зафиксированных версий Hugging Face и имеют собственные лицензии.

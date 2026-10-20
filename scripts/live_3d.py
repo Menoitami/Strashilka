@@ -18,8 +18,17 @@ from PIL import Image
 
 def atomic_json(path, data):
     temporary = path.with_suffix(".tmp")
-    temporary.write_text(json.dumps(data, ensure_ascii=False))
-    temporary.replace(path)
+    temporary.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+    # Windows readers can briefly deny delete/replace access while reading the old
+    # file. Keep the previous complete JSON visible and retry the atomic rename.
+    for attempt in range(51):
+        try:
+            temporary.replace(path)
+            return
+        except PermissionError:
+            if attempt == 50:
+                raise
+            time.sleep(.02)
 
 
 def run(args):
@@ -31,11 +40,13 @@ def run(args):
     import xatlas
 
     from spookyneuro.config import Settings
+    from spookyneuro.face_transition import write_face_transition
     from spookyneuro.mesh_export import export_creature, smooth_normals
     from spookyneuro.multiform import UVBaker, register_surface, sample_surface, tangent_frame
+    from spookyneuro.mutation import face_traits, mutation_plan
     from spookyneuro.reconstruction import load_triposr, reconstruct
     from spookyneuro.renderer import Renderer
-    from spookyneuro.runtime import gpu_job
+    from spookyneuro.runtime import gpu_job, process_exists
     from spookyneuro.temporal import BODY_PROMPT, TemporalGuide, evolve_surface
     from spookyneuro.texture_projection import (
         NeuralTexturePainter,
@@ -68,12 +79,7 @@ def run(args):
     def should_stop():
         if stopped or (output / "stop").exists():
             return True
-        if args.parent:
-            try:
-                os.kill(args.parent, 0)
-            except ProcessLookupError:
-                return True
-        return False
+        return bool(args.parent and not process_exists(args.parent))
 
     def wait_ack(filename, sequence):
         while not args.no_ack and not should_stop():
@@ -164,10 +170,16 @@ def run(args):
                 for channel in ["albedo", "normal"]:
                     shutil.copyfile(source / f"next_{channel}.png", folder / f"{channel}.png")
                 shutil.copyfile(output / "face_mask.png", folder / "mask.png")
+                portrait = write_face_transition(
+                    painter.projector, fitted, smooth, previous_face_texture,
+                    np.asarray(Image.open(folder / "albedo.png"), dtype=np.float32) / 255,
+                    last_settings["head_base_y"], folder,
+                )
                 manifest = {
                     "sequence": face_sequence, "body_sequence": body_sequence,
                     "directory": str(folder), "seed": seed, "seconds": seconds,
                     "texture": stats, "independent_face": True, "extra": "front" not in stats,
+                    "face_traits": face_traits(seed), "portrait_view": portrait,
                 }
                 atomic_json(folder / "face.json", manifest)
                 atomic_json(output / "latest_face.json", manifest)
@@ -207,7 +219,8 @@ def run(args):
                 try:
                     status("Диффузия новой формы", sequence=sequence, seed=seed)
                     guide = guide_evolution.next(previous_concept, rng, chaos, feedback)
-                    renderer.settings.prompt = BODY_PROMPT
+                    plan = mutation_plan(seed, sequence + 1)
+                    renderer.settings.prompt = BODY_PROMPT + ", " + plan["body_detail"]
                     # Bound the prompt cache during an indefinitely running session.
                     if len(renderer.embeddings) > 40:
                         renderer.embeddings.clear()
@@ -265,6 +278,7 @@ def run(args):
                     )
                     manifest = {
                         "schema": 1,
+                        "mutation": plan,
                         "forms": ["base", "previous", "next"],
                         "geometry_targets": ["previous", "next"],
                         "live": True,

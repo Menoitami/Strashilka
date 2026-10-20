@@ -1,0 +1,66 @@
+{
+  "sequence": 8,
+  "directory": ".",
+  "seed": 217,
+  "seconds": 8.999867300000915,
+  "alignment": {
+    "origin": [
+      0.0,
+      -0.46916230366492145,
+      -0.027329842931937187
+    ],
+    "scale": 3.166445623342175,
+    "radius": 0.87
+  },
+  "sampled_at_seconds": 8.798620599998685,
+  "focus": [
+    -0.0016838848097125933,
+    1.4943305797110185,
+    -0.025479385885999416
+  ],
+  "change": 0.005629833042946255,
+  "diffusion": {
+    "inference_ms": 4633.821100000205,
+    "segmentation_ms": 106.85519999969983,
+    "render_ms": 4740.6765000014275,
+    "peak_vram_mib": 4278.2333984375,
+    "actual_steps": 16,
+    "mock": false,
+    "mask_mode": "free",
+    "mask_provider": "CPUExecutionProvider",
+    "device_used_mib": 5896.5,
+    "steps": 24,
+    "sampler": "DPM++ 2M Karras",
+    "strength": 0.68,
+    "allocated_vram_mib": 3667.64453125,
+    "reserved_vram_mib": 4634.0
+  },
+  "reconstruction": {
+    "neural": true,
+    "model": "stabilityai/TripoSR"
+  },
+  "prompt_from": "full length studio photograph of an adult man in dark shorts, head and feet visible, realistic human face, detailed skin, front view, standing, soft neutral light, black background",
+  "prompt_to": "full length studio photograph of an adult man in dark shorts, head and feet visible, elongated asymmetric face, swollen uneven shoulders, detailed human skin, front view, standing, soft neutral light, black background",
+  "prompt_mix": 0.33607681755829893,
+  "comparison": {},
+  "continuity": {
+    "silhouette_iou": 0.9909867172675522,
+    "color_mae": 0.008741712737432615,
+    "accepted": true
+  },
+  "path_position": 0.84,
+  "color_detail": "generated_front_projection",
+  "front_projection": [
+    1.6460559987957248,
+    -0.3226328466054494,
+    -1.6173039289477646,
+    1.3099503236489538
+  ],
+  "recovered_from_anchor": false,
+  "schema": 2,
+  "representation": "neural_density_rgba8",
+  "resolution": 192,
+  "bytes": 28311552,
+  "density_max": 128.0,
+  "playback_only": true
+}

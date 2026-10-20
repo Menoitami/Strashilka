@@ -1,0 +1,66 @@
+{
+  "sequence": 6,
+  "directory": ".",
+  "seed": 217,
+  "seconds": 9.671934499998315,
+  "alignment": {
+    "origin": [
+      0.0,
+      -0.46916230366492145,
+      -0.027329842931937187
+    ],
+    "scale": 3.166445623342175,
+    "radius": 0.87
+  },
+  "sampled_at_seconds": 9.493579899997712,
+  "focus": [
+    0.11539670171927431,
+    1.743074601749488,
+    0.0020724671260972153
+  ],
+  "change": 0.003285485122175464,
+  "diffusion": {
+    "inference_ms": 4692.127000002074,
+    "segmentation_ms": 110.64540000006673,
+    "render_ms": 4802.772600000026,
+    "peak_vram_mib": 4278.2333984375,
+    "actual_steps": 16,
+    "mock": false,
+    "mask_mode": "free",
+    "mask_provider": "CPUExecutionProvider",
+    "device_used_mib": 5896.5,
+    "steps": 24,
+    "sampler": "DPM++ 2M Karras",
+    "strength": 0.68,
+    "allocated_vram_mib": 3667.64453125,
+    "reserved_vram_mib": 4634.0
+  },
+  "reconstruction": {
+    "neural": true,
+    "model": "stabilityai/TripoSR"
+  },
+  "prompt_from": "full length studio photograph of an adult man in dark shorts, head and feet visible, realistic human face, detailed skin, front view, standing, soft neutral light, black background",
+  "prompt_to": "full length studio photograph of an adult man in dark shorts, head and feet visible, elongated asymmetric face, swollen uneven shoulders, detailed human skin, front view, standing, soft neutral light, black background",
+  "prompt_mix": 0.18861454046639228,
+  "comparison": {},
+  "continuity": {
+    "silhouette_iou": 0.9933269780743565,
+    "color_mae": 0.008940197960182153,
+    "accepted": true
+  },
+  "path_position": 0.6,
+  "color_detail": "generated_front_projection",
+  "front_projection": [
+    1.6149983384410884,
+    -0.3114130635453975,
+    -1.6054608144627716,
+    1.300773460068959
+  ],
+  "recovered_from_anchor": false,
+  "schema": 2,
+  "representation": "neural_density_rgba8",
+  "resolution": 192,
+  "bytes": 28311552,
+  "density_max": 128.0,
+  "playback_only": true
+}

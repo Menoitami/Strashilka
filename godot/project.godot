@@ -2,7 +2,7 @@ config_version=5
 
 [application]
 config/name="SpookyNeuro — Creature Lab"
-run/main_scene="res://room_3d.tscn"
+run/main_scene="res://neural_room.tscn"
 
 [display]
 window/size/viewport_width=1280

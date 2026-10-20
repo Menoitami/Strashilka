@@ -1,6 +1,21 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
+
+# The default is the camera-independent neural field. Legacy mesh tools stay explicit.
+case "${1:-}" in
+  --viewer|--generate|--source|--legacy-mesh) ;;
+  *)
+    if [[ ! -x .tools/godot || ! -x .venv/bin/python ]]; then scripts/setup_3d.sh; fi
+    for arg in "$@"; do
+      case "$arg" in
+        --offline|--neural-demo|--field-preview=*)
+          exec .tools/godot --path godot --disable-vsync --max-fps 60 -- "$@" ;;
+      esac
+    done
+    exec .venv/bin/python scripts/launch_3d.py "$@"
+    ;;
+esac
 generate=false
 source_path=""
 custom_source=false
@@ -57,6 +72,6 @@ for arg in "$@"; do
   esac
 done
 if [[ "$scene_path" == res://room_3d.tscn && "$wait_for_neural" == true ]]; then
-  exec .venv/bin/python scripts/launch_3d.py "$@"
+  exec .venv/bin/python scripts/launch_3d.py --legacy-mesh "$@"
 fi
 exec .tools/godot --path godot --disable-vsync --max-fps 60 "$scene_path" -- "$@"

@@ -21,8 +21,9 @@ def correlate_noise(previous, fresh, coefficient):
 
 
 class Renderer:
-    def __init__(self, settings: Settings, mock=False, local_files_only=False):
+    def __init__(self, settings: Settings, mock=False, local_files_only=False, quality=False):
         self.settings = settings.validate()
+        self.quality = quality
         self.mock = mock
         self.local_files_only = local_files_only
         self.pipe = None
@@ -37,7 +38,7 @@ class Renderer:
 
     def _load(self):
         import torch
-        from diffusers import LCMScheduler, StableDiffusionImg2ImgPipeline
+        from diffusers import DPMSolverMultistepScheduler, LCMScheduler, StableDiffusionImg2ImgPipeline
 
         if not torch.cuda.is_available():
             raise RuntimeError(
@@ -65,14 +66,19 @@ class Renderer:
             requires_safety_checker=False,
             local_files_only=self.local_files_only,
         ).to("cuda")
-        self.pipe.scheduler = LCMScheduler.from_config(self.pipe.scheduler.config)
-        self.pipe.load_lora_weights(
-            self.settings.lcm,
-            revision=MODEL_REVISIONS.get(self.settings.lcm),
-            adapter_name="lcm",
-            local_files_only=self.local_files_only,
-            **({"weight_name": "pytorch_lora_weights.safetensors"} if self.local_files_only else {}),
-        )
+        if self.quality:
+            self.pipe.scheduler = DPMSolverMultistepScheduler.from_config(
+                self.pipe.scheduler.config, algorithm_type="dpmsolver++", use_karras_sigmas=True,
+            )
+        else:
+            self.pipe.scheduler = LCMScheduler.from_config(self.pipe.scheduler.config)
+            self.pipe.load_lora_weights(
+                self.settings.lcm,
+                revision=MODEL_REVISIONS.get(self.settings.lcm),
+                adapter_name="lcm",
+                local_files_only=self.local_files_only,
+                **({"weight_name": "pytorch_lora_weights.safetensors"} if self.local_files_only else {}),
+            )
         if self.settings.lora:
             self.pipe.load_lora_weights(
                 self.settings.lora,
@@ -115,11 +121,12 @@ class Renderer:
         self.embeddings = {}
 
     def _set_adapters(self):
-        names, weights = ["lcm"], [1.0]
+        names, weights = ([], []) if self.quality else (["lcm"], [1.0])
         if self.settings.lora:
             names.append("horror")
             weights.append(self.settings.lora_scale)
-        self.pipe.set_adapters(names, adapter_weights=weights)
+        if names:
+            self.pipe.set_adapters(names, adapter_weights=weights)
 
     def render(self, source: Image.Image, metadata=None) -> tuple[Image.Image, dict]:
         started = time.perf_counter()
@@ -128,6 +135,10 @@ class Renderer:
         if not math.isfinite(coherence) or not 0 <= coherence <= 0.95:
             raise ValueError("coherence must be in [0, .95]")
         self.temporal_coherence = coherence
+        guidance = float(meta.get("guidance_scale", 1.0))
+        maximum_guidance = 8 if self.quality else 3
+        if not math.isfinite(guidance) or not 1 <= guidance <= maximum_guidance:
+            raise ValueError(f"guidance_scale must be in [1, {maximum_guidance}]")
         # These are the only settings that may be changed by a scene request.
         old_weight = self.settings.lora_scale
         changes = {
@@ -170,7 +181,7 @@ class Renderer:
                     prompt_embeds=self.embeddings[prompt],
                     num_inference_steps=s.steps,
                     strength=s.strength,
-                    guidance_scale=1.0,
+                    guidance_scale=guidance,
                     generator=torch.Generator(device="cuda").manual_seed(s.seed),
                 ).images[0]
             torch.cuda.synchronize()
@@ -240,6 +251,7 @@ class Renderer:
             "mask_provider": self.mask_provider,
             "device_used_mib": device_used,
             "steps": s.steps,
+            "sampler": "DPM++ 2M Karras" if self.quality else "LCM",
             "strength": s.strength,
             "allocated_vram_mib": self.torch.cuda.memory_allocated() / 2**20 if not self.mock else 0,
             "reserved_vram_mib": self.torch.cuda.memory_reserved() / 2**20 if not self.mock else 0,

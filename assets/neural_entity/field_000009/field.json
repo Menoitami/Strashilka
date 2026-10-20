@@ -1,0 +1,66 @@
+{
+  "sequence": 9,
+  "directory": ".",
+  "seed": 217,
+  "seconds": 10.495097699997132,
+  "alignment": {
+    "origin": [
+      0.0,
+      -0.46916230366492145,
+      -0.027329842931937187
+    ],
+    "scale": 3.166445623342175,
+    "radius": 0.87
+  },
+  "sampled_at_seconds": 10.324691799996799,
+  "focus": [
+    -0.019788795630135875,
+    1.6975167916086875,
+    -0.019375535784018162
+  ],
+  "change": 0.007212358287009267,
+  "diffusion": {
+    "inference_ms": 5419.513000000734,
+    "segmentation_ms": 111.4847999997437,
+    "render_ms": 5530.998099999124,
+    "peak_vram_mib": 4278.2333984375,
+    "actual_steps": 16,
+    "mock": false,
+    "mask_mode": "free",
+    "mask_provider": "CPUExecutionProvider",
+    "device_used_mib": 5896.5,
+    "steps": 24,
+    "sampler": "DPM++ 2M Karras",
+    "strength": 0.68,
+    "allocated_vram_mib": 3667.64453125,
+    "reserved_vram_mib": 4634.0
+  },
+  "reconstruction": {
+    "neural": true,
+    "model": "stabilityai/TripoSR"
+  },
+  "prompt_from": "full length studio photograph of an adult man in dark shorts, head and feet visible, realistic human face, detailed skin, front view, standing, soft neutral light, black background",
+  "prompt_to": "full length studio photograph of an adult man in dark shorts, head and feet visible, elongated asymmetric face, swollen uneven shoulders, detailed human skin, front view, standing, soft neutral light, black background",
+  "prompt_mix": 0.4170096021947874,
+  "comparison": {},
+  "continuity": {
+    "silhouette_iou": 0.9910080454330336,
+    "color_mae": 0.00821332034883358,
+    "accepted": true
+  },
+  "path_position": 0.96,
+  "color_detail": "generated_front_projection",
+  "front_projection": [
+    1.6460559987957248,
+    -0.3226328466054494,
+    -1.6173039289477646,
+    1.3099503236489538
+  ],
+  "recovered_from_anchor": false,
+  "schema": 2,
+  "representation": "neural_density_rgba8",
+  "resolution": 192,
+  "bytes": 28311552,
+  "density_max": 128.0,
+  "playback_only": true
+}

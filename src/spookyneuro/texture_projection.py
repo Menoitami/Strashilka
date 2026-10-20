@@ -12,6 +12,8 @@ from numba import njit
 from PIL import Image
 from scipy.ndimage import distance_transform_edt
 
+from .mutation import face_detail
+
 
 @dataclass
 class View:
@@ -206,7 +208,7 @@ class NeuralTexturePainter:
         layers, stats = [], {}
         if self.anchor is None:
             self.anchor = previous.copy()
-        face_state = FACE_STATES[sequence % len(FACE_STATES)]
+        face_state = FACE_STATES[sequence % len(FACE_STATES)] + ", " + face_detail(seed)
         head_base = float(settings.get("head_base_y", 2.25))
         face_size = int(settings.get("face_size", 512))
         face_size = face_size if face_size in (384, 512) else 512

@@ -1,0 +1,66 @@
+{
+  "sequence": 7,
+  "directory": ".",
+  "seed": 217,
+  "seconds": 15.899519300000975,
+  "alignment": {
+    "origin": [
+      0.0,
+      -0.46916230366492145,
+      -0.027329842931937187
+    ],
+    "scale": 3.166445623342175,
+    "radius": 0.87
+  },
+  "sampled_at_seconds": 15.69954879999932,
+  "focus": [
+    0.06331886956934372,
+    1.7390124077269213,
+    0.03948799782927569
+  ],
+  "change": 0.0040775149228743125,
+  "diffusion": {
+    "inference_ms": 7138.022800001636,
+    "segmentation_ms": 107.40829999849666,
+    "render_ms": 7245.4313000016555,
+    "peak_vram_mib": 4278.2333984375,
+    "actual_steps": 16,
+    "mock": false,
+    "mask_mode": "free",
+    "mask_provider": "CPUExecutionProvider",
+    "device_used_mib": 5896.5,
+    "steps": 24,
+    "sampler": "DPM++ 2M Karras",
+    "strength": 0.68,
+    "allocated_vram_mib": 3667.64453125,
+    "reserved_vram_mib": 4634.0
+  },
+  "reconstruction": {
+    "neural": true,
+    "model": "stabilityai/TripoSR"
+  },
+  "prompt_from": "full length studio photograph of an adult man in dark shorts, head and feet visible, realistic human face, detailed skin, front view, standing, soft neutral light, black background",
+  "prompt_to": "full length studio photograph of an adult man in dark shorts, head and feet visible, elongated asymmetric face, swollen uneven shoulders, detailed human skin, front view, standing, soft neutral light, black background",
+  "prompt_mix": 0.25925925925925924,
+  "comparison": {},
+  "continuity": {
+    "silhouette_iou": 0.9919201520912547,
+    "color_mae": 0.00864423712305558,
+    "accepted": true
+  },
+  "path_position": 0.72,
+  "color_detail": "generated_front_projection",
+  "front_projection": [
+    1.6149983384410884,
+    -0.3114130635453975,
+    -1.6019010343863573,
+    1.2980150964495387
+  ],
+  "recovered_from_anchor": false,
+  "schema": 2,
+  "representation": "neural_density_rgba8",
+  "resolution": 192,
+  "bytes": 28311552,
+  "density_max": 128.0,
+  "playback_only": true
+}

@@ -9,8 +9,10 @@ description = "Asynchronous diffusion creature renderer and Godot horror experim
 requires-python = ">=3.12,<3.13"
 dependencies = [
   "numpy>=2,<3", "pillow>=11", "opencv-python-headless>=4.10", "requests>=2.32",
-  "torch>=2.6", "torchvision>=0.21", "diffusers>=0.35,<0.42", "transformers>=4.45,<5",
-  "accelerate>=1", "peft>=0.17", "safetensors>=0.4", "tensorboard>=2.19"
+  "torch>=2.6; sys_platform != 'win32'", "torchvision>=0.21; sys_platform != 'win32'",
+  "torch==2.11.0; sys_platform == 'win32'", "torchvision==0.26.0; sys_platform == 'win32'",
+  "diffusers>=0.35,<0.42", "transformers>=4.45,<5",
+  "accelerate>=1", "peft>=0.17", "safetensors>=0.4", "tensorboard>=2.19", "psutil>=5.9"
 ]
 
 [project.optional-dependencies]
@@ -37,3 +39,12 @@ testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 110
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu128", marker = "sys_platform == 'win32'" }]
+torchvision = [{ index = "pytorch-cu128", marker = "sys_platform == 'win32'" }]

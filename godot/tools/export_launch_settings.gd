@@ -1,12 +1,15 @@
 extends SceneTree
 
 func _initialize() -> void:
+    quit(export_settings(OS.get_cmdline_user_args()))
+
+static func export_settings(arguments: PackedStringArray) -> int:
     var room_script = load("res://room_3d.gd")
     var settings: Dictionary = room_script.LIVE_DEFAULTS.duplicate()
     settings["seed"] = 1928
     var output := ""
     var defaults := false
-    for arg in OS.get_cmdline_user_args():
+    for arg in arguments:
         if arg.begins_with("--output="):
             output = arg.trim_prefix("--output=")
         if arg == "--defaults":
@@ -18,12 +21,10 @@ func _initialize() -> void:
                 settings[key] = saved.live_settings.get(key, settings[key])
             settings.seed = clampi(int(saved.get("seed", 1928)), 0, 2147483646)
     if output.is_empty():
-        quit(1)
-        return
+        return 1
     var file := FileAccess.open(output, FileAccess.WRITE)
     if file == null:
-        quit(1)
-        return
+        return 1
     file.store_string(JSON.stringify(settings))
     file.close()
-    quit()
+    return 0
