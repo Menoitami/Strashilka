@@ -1,0 +1,14 @@
+{
+  "model": "stable-diffusion-v1-5/stable-diffusion-v1-5",
+  "lcm": "latent-consistency/lcm-lora-sdv1-5",
+  "lora": null,
+  "lora_scale": 0.8,
+  "size": 256,
+  "steps": 4,
+  "strength": 0.65,
+  "seed": 42,
+  "noise_period": 3.0,
+  "prompt": "spookycreature, a single full body humanoid monster, pale mottled flesh, hybrid human and animal anatomy, elongated limbs, distorted face, uncanny practical horror movie creature, dark plain background",
+  "mask_mode": "free",
+  "interpolation": "flow"
+}

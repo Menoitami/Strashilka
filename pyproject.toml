@@ -1,0 +1,39 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "spookyneuro"
+version = "0.1.0"
+description = "Asynchronous diffusion creature renderer and Godot horror experiment"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "numpy>=2,<3", "pillow>=11", "opencv-python-headless>=4.10", "requests>=2.32",
+  "torch>=2.6", "torchvision>=0.21", "diffusers>=0.35,<0.42", "transformers>=4.45,<5",
+  "accelerate>=1", "peft>=0.17", "safetensors>=0.4", "tensorboard>=2.19"
+]
+
+[project.optional-dependencies]
+mask = ["rembg[gpu]>=2.0.85"]
+dev = ["pytest>=8", "ruff>=0.11"]
+mesh = [
+    "einops>=0.7",
+    "imageio>=2.34",
+    "omegaconf>=2.3,<3",
+    "scikit-image>=0.24",
+    "trimesh>=4.0",
+    "xatlas>=0.0.9",
+    "numba>=0.61",
+]
+
+[project.scripts]
+spooky = "spookyneuro.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/spookyneuro"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 110

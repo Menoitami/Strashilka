@@ -1,0 +1,13 @@
+{
+  "model": "stable-diffusion-v1-5/stable-diffusion-v1-5",
+  "rank": 8,
+  "size": 384,
+  "completed_steps": 400,
+  "requested_steps": 400,
+  "seed": 42,
+  "examples": 23,
+  "dataset_signature": "a3f906867ddaa786f7f1b1cf8a6447e5967337984f9120796e22a69373ddbd8e",
+  "balanced_classes": true,
+  "elapsed_seconds": 101.88792261100025,
+  "peak_vram_mib": 1840.28759765625
+}

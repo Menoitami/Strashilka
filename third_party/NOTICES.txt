@@ -1,0 +1,27 @@
+The archive includes a locally trained Stable Diffusion 1.5 LoRA:
+  artifacts/body-horror-lora/lora/pytorch_lora_weights.safetensors
+  Base: stable-diffusion-v1-5/stable-diffusion-v1-5
+  Modifications: rank-8 adapter, 400 training steps, synthetic body-horror data.
+  This is an experimental local derivative, not an official upstream release.
+  The base model's CreativeML Open RAIL-M license is included in
+  Stable-Diffusion-LICENSE; its use restrictions apply to the derivative.
+  Source: https://huggingface.co/stable-diffusion-v1-5/stable-diffusion-v1-5
+  License source: https://github.com/CompVis/stable-diffusion/blob/main/LICENSE
+
+Base weights are downloaded by setup_3d.sh, not embedded in this ZIP:
+  SD 1.5 — CreativeML Open RAIL-M
+  https://huggingface.co/stable-diffusion-v1-5/stable-diffusion-v1-5
+  LCM-LoRA SD 1.5 — OpenRAIL++
+  https://huggingface.co/latent-consistency/lcm-lora-sdv1-5
+  TripoSR — MIT
+  https://huggingface.co/stabilityai/TripoSR
+  DINO ViT-B/16 configuration used by TripoSR's image encoder
+  https://huggingface.co/facebook/dino-vitb16
+
+TripoSR code is fetched from VAST-AI-Research/TripoSR at a pinned revision.
+Its MIT license is also included in TripoSR-LICENSE.
+https://github.com/VAST-AI-Research/TripoSR
+
+Godot and uv are downloaded during setup; each retains its upstream license.
+Python dependency versions and sources are recorded in uv.lock.
+The archive does not relicense third-party components.

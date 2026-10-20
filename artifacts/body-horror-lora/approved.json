@@ -1,0 +1,12 @@
+{
+  "enabled": true,
+  "adapter_scale": 0.55,
+  "checkpoint": 400,
+  "reviewer": "Codex visual comparison",
+  "evaluation": "evaluation/comparison.jpg",
+  "observations": "At four matched seeds the adapter makes faces and muscle/tendon contours more anatomical and reduces robot-like segmentation. Plastic appearance and remaining guide-shaped armor persist. Small synthetic pilot, not production-quality body horror.",
+  "held_out_denoising_loss": [
+    0.11195705737918615,
+    0.10498993285000324
+  ]
+}

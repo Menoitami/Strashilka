@@ -1,0 +1,173 @@
+[
+  {
+    "name": "Pelvis",
+    "parent": -1,
+    "position": [
+      0,
+      1.38,
+      0
+    ]
+  },
+  {
+    "name": "Spine",
+    "parent": 0,
+    "position": [
+      0,
+      1.8,
+      0
+    ]
+  },
+  {
+    "name": "Chest",
+    "parent": 1,
+    "position": [
+      0,
+      2.2,
+      0
+    ]
+  },
+  {
+    "name": "Neck",
+    "parent": 2,
+    "position": [
+      0,
+      2.53,
+      0
+    ]
+  },
+  {
+    "name": "Head",
+    "parent": 3,
+    "position": [
+      0,
+      2.75,
+      0
+    ]
+  },
+  {
+    "name": "ShoulderL",
+    "parent": 2,
+    "position": [
+      -0.31,
+      2.3,
+      0
+    ]
+  },
+  {
+    "name": "ElbowL",
+    "parent": 5,
+    "position": [
+      -0.56,
+      1.87,
+      0.015
+    ]
+  },
+  {
+    "name": "WristL",
+    "parent": 6,
+    "position": [
+      -0.73,
+      1.4,
+      0.05
+    ]
+  },
+  {
+    "name": "ShoulderR",
+    "parent": 2,
+    "position": [
+      0.31,
+      2.3,
+      0
+    ]
+  },
+  {
+    "name": "ElbowR",
+    "parent": 8,
+    "position": [
+      0.56,
+      1.87,
+      0.015
+    ]
+  },
+  {
+    "name": "WristR",
+    "parent": 9,
+    "position": [
+      0.73,
+      1.4,
+      0.05
+    ]
+  },
+  {
+    "name": "HipL",
+    "parent": 0,
+    "position": [
+      -0.17,
+      1.4,
+      0
+    ]
+  },
+  {
+    "name": "KneeL",
+    "parent": 11,
+    "position": [
+      -0.2,
+      0.78,
+      0
+    ]
+  },
+  {
+    "name": "AnkleL",
+    "parent": 12,
+    "position": [
+      -0.24,
+      0.12,
+      0.03
+    ]
+  },
+  {
+    "name": "ToeL",
+    "parent": 13,
+    "position": [
+      -0.24,
+      0.05,
+      0.2
+    ]
+  },
+  {
+    "name": "HipR",
+    "parent": 0,
+    "position": [
+      0.17,
+      1.4,
+      0
+    ]
+  },
+  {
+    "name": "KneeR",
+    "parent": 15,
+    "position": [
+      0.2,
+      0.78,
+      0
+    ]
+  },
+  {
+    "name": "AnkleR",
+    "parent": 16,
+    "position": [
+      0.24,
+      0.12,
+      0.03
+    ]
+  },
+  {
+    "name": "ToeR",
+    "parent": 17,
+    "position": [
+      0.24,
+      0.05,
+      0.2
+    ]
+  }
+]
