@@ -28,13 +28,16 @@ PROMPTS = (
 def image_continuity(previous, current):
     """Measure adjacent generated subjects, including silhouette and skin-color jumps."""
     if previous is None:
-        return {"silhouette_iou": 1.0, "color_mae": 0.0, "accepted": True}
+        return {"silhouette_iou": 1.0, "color_mae": 0.0, "accepted": True, "changed": True}
     a, b = [np.asarray(image.convert("RGBA").resize((128,128))) for image in (previous,current)]
     am, bm = a[...,3]>80, b[...,3]>80
     union, intersection = am|bm, am&bm
     iou = float(intersection.sum()/max(1,union.sum()))
     error = float(np.abs(a[intersection,:3].astype(float)-b[intersection,:3]).mean()/255) if intersection.any() else 1.0
-    return {"silhouette_iou": iou, "color_mae": error, "accepted": iou>=.78 and error<=.16}
+    # Permit growing limbs and changing faces, but reject subject loss/color flashes.
+    # A near-copy is safe to interpolate yet is not a useful next mutation.
+    return {"silhouette_iou": iou, "color_mae": error,
+            "accepted": iou>=.65 and error<=.24, "changed": iou<=.97 or error>=.045}
 
 
 def front_projection(rgba, concept):

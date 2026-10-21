@@ -253,6 +253,8 @@ class Renderer:
             "steps": s.steps,
             "sampler": "DPM++ 2M Karras" if self.quality else "LCM",
             "strength": s.strength,
+            "noise_position": self.noise_position,
+            "noise_period": s.noise_period,
             "allocated_vram_mib": self.torch.cuda.memory_allocated() / 2**20 if not self.mock else 0,
             "reserved_vram_mib": self.torch.cuda.memory_reserved() / 2**20 if not self.mock else 0,
         }

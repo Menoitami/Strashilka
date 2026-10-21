@@ -76,6 +76,24 @@ def test_adjacent_identity_gate_rejects_silhouette_and_color_jumps():
     assert not image_continuity(image,Image.fromarray(recolored))["accepted"]
 
 
+def test_mutation_gate_distinguishes_near_copies_from_growing_limbs():
+    data = np.zeros((128,128,4),dtype="uint8")
+    data[10:118,45:80] = [160,120,95,255]
+    image = Image.fromarray(data)
+    assert not image_continuity(image,image)["changed"]
+    subtle = data.copy()
+    subtle[10:118,45:80,0] += 2
+    assert not image_continuity(image,Image.fromarray(subtle))["changed"]
+    arm = data.copy()
+    arm[25:55,80:115] = [160,120,95,255]
+    growing = image_continuity(image,Image.fromarray(arm))
+    assert growing["accepted"] and growing["changed"]
+    face = data.copy()
+    face[10:40,45:80,:3] = [70,45,35]
+    changing_face = image_continuity(image,Image.fromarray(face))
+    assert changing_face["accepted"] and changing_face["changed"]
+
+
 def test_detail_projection_maps_volume_extent_to_generated_subject():
     density = np.zeros((64,)*3,dtype="float32")
     density[14:49,8:56,20:44] = 32

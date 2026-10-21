@@ -1,8 +1,8 @@
 extends "res://main.gd"
 ## The mesh experiment remains in room_3d.tscn; this scene renders a neural volume.
 const Paths = preload("res://runtime_paths.gd")
-const SETTINGS = "user://neural_field_settings_v2.json"
-const FIELD_DEFAULTS = {"seed":217,"strength":.68,"motion":.12,"resolution":192,"duration":6.0,"effects":.35,"paused":false}
+const SETTINGS = "user://neural_field_settings_v3.json"
+const FIELD_DEFAULTS = {"seed":217,"strength":.82,"motion":.5,"resolution":192,"duration":6.0,"effects":.35,"paused":false}
 var settings := FIELD_DEFAULTS.duplicate()
 var entity = preload("res://neural_entity.gd").new()
 var stage = preload("res://realism_stage.gd").new()
@@ -135,8 +135,8 @@ func _build_ui() -> void:
     status_label = _label(stack,"",14,Color("b5bdb4"))
     metrics_label = _label(stack,"",13,Color("8eaaa1"))
     generation_label = _label(stack,"",13,Color("c7a799"))
-    _slider(stack,"Сила изменения образа",.5,.85,float(settings.strength),.01,func(v): settings.strength=v; _publish_settings())
-    _slider(stack,"Шаг изменения образа",.03,.3,float(settings.motion),.01,func(v): settings.motion=v; _publish_settings())
+    _slider(stack,"Сила перерисовки",.5,.95,float(settings.strength),.01,func(v): settings.strength=v; _publish_settings())
+    _slider(stack,"Шаг шума",.15,1.0,float(settings.motion),.05,func(v): settings.motion=v; _publish_settings())
     _slider(stack,"Длительность превращения",4.0,16.0,float(settings.duration),.25,func(v): settings.duration=v; _publish_settings())
     _slider(stack,"Искажение пространства",0.0,1.0,float(settings.effects),.05,func(v): settings.effects=v; _publish_settings())
     var orbit_button := CheckButton.new()

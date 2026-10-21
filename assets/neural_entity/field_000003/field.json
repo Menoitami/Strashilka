@@ -1,37 +1,39 @@
 {
   "sequence": 3,
-  "directory": ".",
+  "directory": "E:\\progs\\Strashilka\\artifacts\\mutation-visible-fields\\field_000003",
   "seed": 217,
-  "seconds": 11.091829799999687,
+  "seconds": 2.1995289999995293,
   "alignment": {
     "origin": [
       0.0,
       -0.46916230366492145,
-      -0.027329842931937187
+      -0.018219895287958088
     ],
     "scale": 3.166445623342175,
     "radius": 0.87
   },
-  "sampled_at_seconds": 10.881601900000533,
+  "sampled_at_seconds": 2.023059299999659,
   "focus": [
-    0.11645677856330473,
-    1.5318455779027493,
-    -0.02479871962441681
+    0.02041081654978694,
+    1.542158540924849,
+    0.02721821807500787
   ],
-  "change": 0.0026217127034426414,
+  "change": 0.03530887117300975,
   "diffusion": {
-    "inference_ms": 6003.421699999308,
-    "segmentation_ms": 111.82660000122269,
-    "render_ms": 6115.248499998415,
+    "inference_ms": 1008.3088999999745,
+    "segmentation_ms": 99.60210000008374,
+    "render_ms": 1107.9115000002275,
     "peak_vram_mib": 4278.2333984375,
-    "actual_steps": 16,
+    "actual_steps": 19,
     "mock": false,
     "mask_mode": "free",
     "mask_provider": "CPUExecutionProvider",
     "device_used_mib": 5896.5,
     "steps": 24,
     "sampler": "DPM++ 2M Karras",
-    "strength": 0.68,
+    "strength": 0.82,
+    "noise_position": 1.0,
+    "noise_period": 1.0,
     "allocated_vram_mib": 3667.64453125,
     "reserved_vram_mib": 4634.0
   },
@@ -41,26 +43,28 @@
   },
   "prompt_from": "full length studio photograph of an adult man in dark shorts, head and feet visible, realistic human face, detailed skin, front view, standing, soft neutral light, black background",
   "prompt_to": "full length studio photograph of an adult man in dark shorts, head and feet visible, elongated asymmetric face, swollen uneven shoulders, detailed human skin, front view, standing, soft neutral light, black background",
-  "prompt_mix": 0.034293552812071325,
+  "prompt_mix": 0.444546054971295,
   "comparison": {},
   "continuity": {
-    "silhouette_iou": 0.9951667472208796,
-    "color_mae": 0.010270865671831303,
-    "accepted": true
+    "silhouette_iou": 0.852559205500382,
+    "color_mae": 0.06418991730503432,
+    "accepted": true,
+    "changed": true
   },
-  "path_position": 0.24,
+  "path_position": 1.0,
   "color_detail": "generated_front_projection",
   "front_projection": [
-    1.6220507329320977,
-    -0.31591773437211534,
-    -1.6208979376787596,
-    1.3107782628330573
+    1.6101159114857744,
+    -0.30242360379346683,
+    -1.6065219027547797,
+    1.3094234532590698
   ],
+  "mutation_step": 0.5,
+  "generation_attempts": 1,
   "recovered_from_anchor": false,
   "schema": 2,
   "representation": "neural_density_rgba8",
   "resolution": 192,
   "bytes": 28311552,
-  "density_max": 128.0,
-  "playback_only": true
+  "density_max": 128.0
 }

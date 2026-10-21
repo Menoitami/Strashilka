@@ -1,37 +1,39 @@
 {
   "sequence": 12,
-  "directory": ".",
+  "directory": "E:\\progs\\Strashilka\\artifacts\\mutation-visible-fields\\field_000012",
   "seed": 217,
-  "seconds": 18.086014100001194,
+  "seconds": 2.1645673000002716,
   "alignment": {
     "origin": [
       0.0,
       -0.46916230366492145,
-      -0.027329842931937187
+      -0.018219895287958088
     ],
     "scale": 3.166445623342175,
     "radius": 0.87
   },
-  "sampled_at_seconds": 17.911771200000658,
+  "sampled_at_seconds": 1.9921828000005917,
   "focus": [
-    0.01458325232573773,
-    1.5856366904250863,
-    0.012511727315820629
+    0.026163923167113287,
+    1.4689915517217689,
+    -0.03883568666965286
   ],
-  "change": 0.00859827007865875,
+  "change": 0.026421324185133176,
   "diffusion": {
-    "inference_ms": 11171.669800001837,
-    "segmentation_ms": 108.82149999815738,
-    "render_ms": 11280.491500001517,
+    "inference_ms": 1008.180299999367,
+    "segmentation_ms": 98.58170000006794,
+    "render_ms": 1106.7624999996042,
     "peak_vram_mib": 4278.2333984375,
-    "actual_steps": 16,
+    "actual_steps": 19,
     "mock": false,
     "mask_mode": "free",
     "mask_provider": "CPUExecutionProvider",
     "device_used_mib": 5896.5,
     "steps": 24,
     "sampler": "DPM++ 2M Karras",
-    "strength": 0.68,
+    "strength": 0.82,
+    "noise_position": 5.5,
+    "noise_period": 1.0,
     "allocated_vram_mib": 3667.64453125,
     "reserved_vram_mib": 4634.0
   },
@@ -39,28 +41,30 @@
     "neural": true,
     "model": "stabilityai/TripoSR"
   },
-  "prompt_from": "full length studio photograph of an adult man in dark shorts, head and feet visible, realistic human face, detailed skin, front view, standing, soft neutral light, black background",
-  "prompt_to": "full length studio photograph of an adult man in dark shorts, head and feet visible, elongated asymmetric face, swollen uneven shoulders, detailed human skin, front view, standing, soft neutral light, black background",
-  "prompt_mix": 0.663923182441701,
+  "prompt_from": "full length studio photograph of an adult man in dark shorts, head and feet visible, elongated arms, incomplete extra arm emerging from shoulder, distorted human face, detailed skin, front view, standing, soft neutral light, black background",
+  "prompt_to": "full length studio photograph of an adult man in dark shorts, head and feet visible, melting human face, crooked torso, limbs merging into flesh, detailed skin, front view, standing, soft neutral light, black background",
+  "prompt_mix": 0.5692459863841894,
   "comparison": {},
   "continuity": {
-    "silhouette_iou": 0.9879350348027842,
-    "color_mae": 0.007337821616825844,
-    "accepted": true
+    "silhouette_iou": 0.8273588792748249,
+    "color_mae": 0.10868617035127463,
+    "accepted": true,
+    "changed": true
   },
-  "path_position": 1.3200000000000003,
+  "path_position": 5.5,
   "color_detail": "generated_front_projection",
   "front_projection": [
-    1.6079459439500792,
-    -0.30690839271867953,
-    -1.6019010343863573,
-    1.2980150964495387
+    1.6149983384410884,
+    -0.30749916922054427,
+    -1.6460559987957248,
+    1.3236113201866626
   ],
+  "mutation_step": 0.5,
+  "generation_attempts": 1,
   "recovered_from_anchor": false,
   "schema": 2,
   "representation": "neural_density_rgba8",
   "resolution": 192,
   "bytes": 28311552,
-  "density_max": 128.0,
-  "playback_only": true
+  "density_max": 128.0
 }

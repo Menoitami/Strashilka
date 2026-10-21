@@ -59,7 +59,7 @@ def run(args):
     try:
         with gpu_job():
             status("Загрузка генератора образов")
-            renderer = Renderer(Settings(size=512, steps=24, strength=.68, mask_mode="free",
+            renderer = Renderer(Settings(size=512, steps=24, strength=.82, noise_period=1.0, mask_mode="free",
                                          mask_device="cpu", seed=args.seed), local_files_only=True, quality=True)
             status("Загрузка нейронного объёма")
             model = load_triposr(root / ".tools/TripoSR", local_files_only=True)
@@ -72,7 +72,7 @@ def run(args):
             alignment = None
             sequence, errors, cleaned = 0, 0, 0
             path_position = 0.0
-            previous_strength = .68
+            previous_strength = .82
             while not stopping() and (not args.frames or sequence < args.frames):
                 settings = {}
                 try:
@@ -95,11 +95,13 @@ def run(args):
                 tick = time.perf_counter()
                 try:
                     sequence_next = sequence+1
-                    step = float(np.clip(settings.get("motion", .12), .03, .3)) if sequence else 0.0
-                    requested_strength = float(np.clip(settings.get("strength", .68), .5, .85))
-                    strength = float(np.clip(requested_strength,previous_strength-.015,previous_strength+.015))
+                    step = float(np.clip(settings.get("motion", .5), .15, 1.0)) if sequence else 0.0
+                    requested_strength = float(np.clip(settings.get("strength", .82), .5, .95))
+                    strength = (float(np.clip(requested_strength,previous_strength-.03,previous_strength+.03))
+                                if sequence else requested_strength)
                     recovered = False
-                    for attempt in range(5):
+                    lower_step, upper_step = 0.0, None
+                    for attempt in range(6):
                         candidate_position = path_position+step
                         phase = candidate_position/2.16
                         index = int(phase) % len(PROMPTS)
@@ -107,18 +109,22 @@ def run(args):
                         renderer.settings.prompt = "neural_entity"
                         renderer.embeddings["neural_entity"] = embeddings[index]*(1-blend)+embeddings[(index+1)%4]*blend
                         status("Детальная генерация", sequence=sequence, queued=max(0,sequence-acknowledged))
-                        # A clean identity anchor prevents recursive img2img from accumulating
-                        # outlines and patterns. Adjacent noise/prompt coordinates change slowly.
+                        # Phase is measured directly in noise intervals (noise_period=1).
+                        # Smooth playback comes from volume interpolation, not near-identical images.
                         image, diffusion = renderer.render(anchor, {"phase": candidate_position,
                             "coherence":0, "strength":strength, "guidance_scale":5.5})
                         continuity = image_continuity(previous_image,image)
-                        if valid_silhouette(image) and continuity["accepted"]:
+                        if valid_silhouette(image) and continuity["accepted"] and continuity["changed"]:
                             break
-                        step *= .5
-                        strength = (strength+previous_strength)*.5
+                        if valid_silhouette(image) and continuity["accepted"]:
+                            lower_step = step
+                            step = min(1.0,step*1.8) if upper_step is None else (step+upper_step)*.5
+                        else:
+                            upper_step = step
+                            step = (lower_step+step)*.5
                         recovered = True
                     else:
-                        raise ValueError("Слишком резкая смена образа; предыдущий объём сохранён")
+                        raise ValueError("Не найдено заметное связное изменение; предыдущий объём сохранён")
                     folder = output / f"field_{sequence_next:06d}"
                     folder.mkdir(exist_ok=True)
                     image.save(folder / "concept.png")
@@ -143,6 +149,7 @@ def run(args):
                         "prompt_mix": blend, "comparison": comparison, "continuity":continuity,
                         "path_position":candidate_position, "color_detail":"generated_front_projection",
                         "front_projection":front_projection(field,image),
+                        "mutation_step":step, "generation_attempts":attempt+1,
                         "recovered_from_anchor": recovered,
                     })
                     atomic_json(output / "latest.json", manifest)
